@@ -3,11 +3,13 @@ package org.mmpp.sample.jdbc_extender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.io.*;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Properties;
 
@@ -20,24 +22,22 @@ abstract public class AbstractJDBCExtender {
 
     @Autowired
     protected JdbcTemplate jdbcTemplate;
+    @Autowired
+    ResourceLoader resourceLoader;
 
     /**
      * 設定ファイル
      */
-    private final File configFile;
+    private final String configFile;
 
     /**
      * 設定
      */
     private Properties configProperties = null;
 
-    public AbstractJDBCExtender(File file){
-        this.configFile = file;
-    }
 
-    public AbstractJDBCExtender(String file){
-        URL url = getClass().getClassLoader().getResource(file);
-        this.configFile = new File(url.getFile());
+    public AbstractJDBCExtender(String filepath) {
+        this.configFile = filepath;
     }
 
     /**
@@ -49,11 +49,22 @@ abstract public class AbstractJDBCExtender {
             return configProperties;
         }
         configProperties = new Properties();
-
+        Resource resource = resourceLoader.getResource("classpath:" + this.configFile);
+        InputStreamReader inputStreamReader = null;
         try {
-            configProperties.load(new FileReader(this.configFile));
+            inputStreamReader = new InputStreamReader(resource.getInputStream(), StandardCharsets.UTF_8);
+
+            configProperties.load(inputStreamReader);
         } catch (IOException e) {
             e.printStackTrace();
+        }finally {
+            if(inputStreamReader != null) {
+                try {
+                    inputStreamReader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
         }
         return configProperties;
     }
