@@ -23,7 +23,7 @@ abstract public class AbstractJDBCExtender {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
     @Autowired
-    ResourceLoader resourceLoader;
+    private ResourceLoader resourceLoader;
 
     /**
      * 設定ファイル
